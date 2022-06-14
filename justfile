@@ -1,4 +1,4 @@
-docsurl := "http://localhost:8080/pkg/manium"
+docsurl := "http://localhost:8080/pkg/github.com/lossdev/websockit"
 
 _default:
   @just --list --list-prefix '  > '
@@ -7,10 +7,6 @@ _default:
 docs:
   sleep 2 && if [ {{os()}} == "macos" ]; then open {{docsurl}}; else xdg-open {{docsurl}}; fi &
   godoc -http=localhost:8080
-
-# build manium binary
-build:
-  go build
 
 # test all packages
 test:
