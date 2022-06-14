@@ -9,11 +9,14 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// WebsocketOption specifies any custom options the websocket connection should have
-type WebsocketOption func(*Websocket)
+// WebsocketClientOption specifies any custom options a client websocket connection should have
+type WebsocketClientOption func(*Websocket)
+
+// WebsocketServerOption specifies any custom options a server websocket connection should have
+type WebsocketServerOption func(*Websocket)
 
 // NewWebsocket should be called for any new websocket pair, server or client. This will initialize the websocket
-// struct which will be used to accept any websocket options that are set
+// struct values which will be used to accept any websocket options that are set
 func NewWebsocket() *Websocket {
 	return &Websocket{
 		conn:   nil,
@@ -21,69 +24,105 @@ func NewWebsocket() *Websocket {
 	}
 }
 
-// ServerSocket sets up a new server websocket
-func (w *Websocket) ServerSocket(connectUrl string, requestHeader http.Header, opts ...WebsocketOption) error {
-	w.setSocketOpts()
-	return w.dial(connectUrl, requestHeader)
-}
-
-// ClientSocket sets up a new client websocket
-func (w *Websocket) ClientSocket(connectUrl string, requestHeader http.Header, opts ...WebsocketOption) error {
-	w.setSocketOpts()
-	w.dialer.TLSClientConfig = nil
-	return w.dial(connectUrl, requestHeader)
-}
-
-func (w *Websocket) setSocketOpts(opts ...WebsocketOption) {
+// ServerSocket sets up a new server websocket end
+func (w *Websocket) ServerSocket(wr http.ResponseWriter, req *http.Request, headers http.Header, opts ...WebsocketServerOption) error {
 	for _, o := range opts {
 		o(w)
 	}
-}
-
-func (w *Websocket) dial(connectUrl string, requestHeader http.Header) error {
-	conn, _, err := w.dialer.Dial(connectUrl, requestHeader)
+	conn, err := w.upgrader.Upgrade(wr, req, headers)
 	w.conn = conn
 	return err
 }
 
-// WithProxy takes a proxy func and runs each new http.Request through this func
-func WithProxy(h func(*http.Request) (*url.URL, error)) WebsocketOption {
+// ServerWithHandshakeTimeout sets a timeout duration for the websocket handshake
+func ServerWithHandshakeTimeout(t time.Duration) WebsocketServerOption {
 	return func(w *Websocket) {
-		w.dialer.Proxy = h
+		w.upgrader.HandshakeTimeout = t
 	}
 }
 
-// WithTLSConfig should only be used for websocket servers. If you want to enable encrypted websockets (wss),
-// set a TLS certificate chain in the tls.Config
-func WithTLSConfig(t *tls.Config) WebsocketOption {
+// ServerWithReadBufferSize sets the size limit (in bytes) of read buffers in the websocket
+func ServerWithReadBufferSize(bufferSize int) WebsocketServerOption {
+	return func(w *Websocket) {
+		w.upgrader.ReadBufferSize = bufferSize
+	}
+}
+
+// ServerWithWriteBufferSize sets the size limit (in bytes) of write buffers in the websocket
+func ServerWithWriteBufferSize(bufferSize int) WebsocketServerOption {
+	return func(w *Websocket) {
+		w.upgrader.WriteBufferSize = bufferSize
+	}
+}
+
+// ServerWithSubprotocols should be used to set the server's preferred subprotocols
+func ServerWithSubprotocols(protocols []string) WebsocketServerOption {
+	return func(w *Websocket) {
+		w.upgrader.Subprotocols = protocols
+	}
+}
+
+// ServerWithErrorFunc can use a custom HTTP error function - otherwise, http.Error will print errors
+func ServerWithErrorFunc(errorFunc func(wr http.ResponseWriter, req *http.Request, status int, reason error)) WebsocketServerOption {
+	return func(w *Websocket) {
+		w.upgrader.Error = errorFunc
+	}
+}
+
+// ServerWithCheckOriginFunc can override the default CheckOrigin deny policy given the http.Request made to the server
+func ServerWithCheckOriginFunc(originFunc func(r *http.Request) bool) WebsocketServerOption {
+	return func(w *Websocket) {
+		w.upgrader.CheckOrigin = originFunc
+	}
+}
+
+// ClientSocket sets up a new client websocket end
+func (w *Websocket) ClientSocket(connectUrl string, headers http.Header, opts ...WebsocketClientOption) error {
+	for _, o := range opts {
+		o(w)
+	}
+	conn, _, err := w.dialer.Dial(connectUrl, headers)
+	w.conn = conn
+	return err
+}
+
+// ClientWithProxy takes a proxy func and runs each new http.Request through this func
+func ClientWithProxy(proxyFunc func(*http.Request) (*url.URL, error)) WebsocketClientOption {
+	return func(w *Websocket) {
+		w.dialer.Proxy = proxyFunc
+	}
+}
+
+// ClientWithTLSConfig sets the TLS config for the websocket session
+func ClientWithTLSConfig(t *tls.Config) WebsocketClientOption {
 	return func(w *Websocket) {
 		w.dialer.TLSClientConfig = t
 	}
 }
 
-// WithHandshakeTimeout sets a timeout duration for the websocket handshake
-func WithHandshakeTimeout(t time.Duration) WebsocketOption {
+// ClientWithHandshakeTimeout sets a timeout duration for the websocket handshake
+func ClientWithHandshakeTimeout(t time.Duration) WebsocketClientOption {
 	return func(w *Websocket) {
 		w.dialer.HandshakeTimeout = t
 	}
 }
 
-// WithReadBufferSize sets the size limit (in bytes) of read buffers in the websocket
-func WithReadBufferSize(bufferSize int) WebsocketOption {
+// ClientWithReadBufferSize sets the size limit (in bytes) of read buffers in the websocket
+func ClientWithReadBufferSize(bufferSize int) WebsocketClientOption {
 	return func(w *Websocket) {
 		w.dialer.ReadBufferSize = bufferSize
 	}
 }
 
-// WithWriteBufferSize sets the size limit (in bytes) of write buffers in the websocket
-func WithWriteBufferSize(bufferSize int) WebsocketOption {
+// ClientWithWriteBufferSize sets the size limit (in bytes) of write buffers in the websocket
+func ClientWithWriteBufferSize(bufferSize int) WebsocketClientOption {
 	return func(w *Websocket) {
 		w.dialer.WriteBufferSize = bufferSize
 	}
 }
 
-// WithSubprotocols should be used to set the client's preferred subprotocols
-func WithSubprotocols(protocols []string) WebsocketOption {
+// ClientWithSubprotocols should be used to set the client's preferred subprotocols
+func ClientWithSubprotocols(protocols []string) WebsocketClientOption {
 	return func(w *Websocket) {
 		w.dialer.Subprotocols = protocols
 	}
