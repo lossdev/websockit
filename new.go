@@ -22,22 +22,28 @@ func NewWebsocket() *Websocket {
 }
 
 // ServerSocket sets up a new server websocket
-func (w *Websocket) ServerSocket(opts ...WebsocketOption) *Websocket {
+func (w *Websocket) ServerSocket(connectUrl string, requestHeader http.Header, opts ...WebsocketOption) error {
 	w.setSocketOpts()
-	return w
+	return w.dial(connectUrl, requestHeader)
 }
 
 // ClientSocket sets up a new client websocket
-func (w *Websocket) ClientSocket(opts ...WebsocketOption) *Websocket {
+func (w *Websocket) ClientSocket(connectUrl string, requestHeader http.Header, opts ...WebsocketOption) error {
 	w.setSocketOpts()
 	w.dialer.TLSClientConfig = nil
-	return w
+	return w.dial(connectUrl, requestHeader)
 }
 
 func (w *Websocket) setSocketOpts(opts ...WebsocketOption) {
 	for _, o := range opts {
 		o(w)
 	}
+}
+
+func (w *Websocket) dial(connectUrl string, requestHeader http.Header) error {
+	conn, _, err := w.dialer.Dial(connectUrl, requestHeader)
+	w.conn = conn
+	return err
 }
 
 // WithProxy takes a proxy func and runs each new http.Request through this func
