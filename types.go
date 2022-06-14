@@ -6,8 +6,9 @@ import (
 
 // Websocket is the embedded struct that websocket clients and servers have in common
 type Websocket struct {
-	conn   *websocket.Conn
-	dialer *websocket.Dialer
+	conn     *websocket.Conn
+	dialer   *websocket.Dialer
+	upgrader *websocket.Upgrader
 }
 
 // WebsocketServer inherits the Websocket fields and methods, and implements its own unique methods
