@@ -1,6 +1,8 @@
 package websockit
 
 import (
+	"time"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -13,10 +15,13 @@ type Websocket struct {
 
 // WebsocketServer inherits the Websocket fields and methods, and implements its own unique methods
 type WebsocketServer struct {
-	Websocket
+	*Websocket
 }
 
 // WebsocketClient inherits the Websocket fields and methods, and implements its own unique methods
 type WebsocketClient struct {
-	Websocket
+	*Websocket
+
+	pingEnabled bool
+	pongTimeout time.Duration
 }
