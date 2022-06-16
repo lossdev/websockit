@@ -14,10 +14,12 @@ func main() {
 		websockit.ClientWithHandshakeTimeout(5 * time.Second),
 		websockit.ClientWithProxy(http.ProxyFromEnvironment),
 	}
-	client, err := ws.ClientSocket("wss://ws.postman-echo.com/raw", nil, clientOpts...)
+	client, err := ws.ClientSocket("ws://127.0.0.1:8080", nil, clientOpts...)
 	if err != nil {
-		log.Println(err)
+		log.Fatalln(err)
 	}
+	defer client.CloseNice()
+
 	pingOpts := []websockit.ClientPingOption{
 		websockit.PingWithPongTimeout(10 * time.Second),
 		websockit.PingWithPongLog(true),
