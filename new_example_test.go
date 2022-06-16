@@ -20,7 +20,7 @@ func ExampleWebsocket_ServerSocket() {
 	var w http.ResponseWriter
 	var req *http.Request
 
-	if err := ws.ServerSocket(w, req, nil, opts...); err != nil {
+	if _, err := ws.ServerSocket(w, req, nil, opts...); err != nil {
 		log.Println(err)
 	}
 }
@@ -31,7 +31,7 @@ func ExampleWebsocket_ClientSocket() {
 		websockit.ClientWithHandshakeTimeout(5 * time.Second),
 		websockit.ClientWithProxy(http.ProxyFromEnvironment),
 	}
-	if err := ws.ClientSocket("wss://ws.postman-echo.com/raw", nil, opts...); err != nil {
+	if _, err := ws.ClientSocket("wss://ws.postman-echo.com/raw", nil, opts...); err != nil {
 		log.Println(err)
 	}
 }
