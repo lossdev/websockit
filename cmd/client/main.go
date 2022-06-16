@@ -41,7 +41,7 @@ func main() {
 		ticker := time.NewTicker(5 * time.Second)
 		for range ticker.C {
 			log.Println("write: 'FooBar'")
-			client.WriteTextMessage([]byte("FooBar"))
+			_ = client.WriteTextMessage([]byte("FooBar"))
 		}
 	}()
 

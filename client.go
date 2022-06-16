@@ -27,16 +27,16 @@ func (w *WebsocketClient) EnableServerPings(opts ...ClientPingOption) {
 		o(po)
 	}
 	w.pongTimeout = po.pongTimeout
-	w.conn.SetReadDeadline(time.Now().Add(po.pongTimeout))
+	_ = w.conn.SetReadDeadline(time.Now().Add(po.pongTimeout))
 	if po.logPongs {
 		w.conn.SetPongHandler(func(string) error {
-			w.conn.SetReadDeadline(time.Now().Add(po.pongTimeout))
+			_ = w.conn.SetReadDeadline(time.Now().Add(po.pongTimeout))
 			log.Println("[websockit] pong recv")
 			return nil
 		})
 	} else {
 		w.conn.SetPongHandler(func(string) error {
-			w.conn.SetReadDeadline(time.Now().Add(po.pongTimeout))
+			_ = w.conn.SetReadDeadline(time.Now().Add(po.pongTimeout))
 			return nil
 		})
 	}

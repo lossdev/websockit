@@ -21,7 +21,7 @@ func (w *Websocket) RemoteAddr() net.Addr {
 // CloseNice closes the Websocket connection by sending a CloseNormalClosure control message to the other end of the connection
 func (w *Websocket) CloseNice() {
 	msg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")
-	w.conn.WriteControl(websocket.CloseMessage, msg, time.Now().Add(3*time.Second))
+	_ = w.conn.WriteControl(websocket.CloseMessage, msg, time.Now().Add(3*time.Second))
 }
 
 // CloseNow closes the Websocket connection without sending a Close control message
