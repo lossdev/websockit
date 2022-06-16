@@ -25,13 +25,16 @@ func NewWebsocket() *Websocket {
 }
 
 // ServerSocket sets up a new server websocket end
-func (w *Websocket) ServerSocket(wr http.ResponseWriter, req *http.Request, headers http.Header, opts ...WebsocketServerOption) error {
+func (w *Websocket) ServerSocket(wr http.ResponseWriter, req *http.Request, headers http.Header, opts ...WebsocketServerOption) (*WebsocketServer, error) {
 	for _, o := range opts {
 		o(w)
 	}
 	conn, err := w.upgrader.Upgrade(wr, req, headers)
+	if err != nil {
+		return nil, err
+	}
 	w.conn = conn
-	return err
+	return &WebsocketServer{w}, nil
 }
 
 // ServerWithHandshakeTimeout sets a timeout duration for the websocket handshake
@@ -77,13 +80,16 @@ func ServerWithCheckOriginFunc(originFunc func(r *http.Request) bool) WebsocketS
 }
 
 // ClientSocket sets up a new client websocket end
-func (w *Websocket) ClientSocket(connectUrl string, headers http.Header, opts ...WebsocketClientOption) error {
+func (w *Websocket) ClientSocket(connectUrl string, headers http.Header, opts ...WebsocketClientOption) (*WebsocketClient, error) {
 	for _, o := range opts {
 		o(w)
 	}
 	conn, _, err := w.dialer.Dial(connectUrl, headers)
+	if err != nil {
+		return nil, err
+	}
 	w.conn = conn
-	return err
+	return &WebsocketClient{w, false, 60 * time.Second}, nil
 }
 
 // ClientWithProxy takes a proxy func and runs each new http.Request through this func
