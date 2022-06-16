@@ -19,8 +19,9 @@ type WebsocketServerOption func(*Websocket)
 // struct values which will be used to accept any websocket options that are set
 func NewWebsocket() *Websocket {
 	return &Websocket{
-		conn:   nil,
-		dialer: &websocket.Dialer{},
+		conn:     nil,
+		dialer:   &websocket.Dialer{},
+		upgrader: &websocket.Upgrader{},
 	}
 }
 
